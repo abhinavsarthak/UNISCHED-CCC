@@ -44,13 +44,9 @@ university_scheduler/
 
 ## Setup & Installation
 
-### 1. Clone / download
 
-```bash
-cd university_scheduler
-```
 
-### 2. Python environment
+### 1. Python environment
 
 ```bash
 python -m venv venv
@@ -58,7 +54,7 @@ source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3. MySQL database
+### 2. MySQL database
 
 ```bash
 mysql -u root -p < setup.sql
@@ -67,14 +63,14 @@ mysql -u root -p < setup.sql
 This creates the `university_scheduler` database with all tables and sample data
 (6 departments, 10 instructors, 15 courses, 10 classrooms, 25 time slots).
 
-### 4. Environment variables
+### 3. Environment variables
 
 ```bash
 cp .env.example .env
 # Edit .env with your MySQL credentials
 ```
 
-### 5. Run
+### 4. Run
 
 ```bash
 python app.py
