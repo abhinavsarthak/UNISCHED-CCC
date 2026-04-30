@@ -1,8 +1,4 @@
-/* ===================================================
-   University Course Scheduling System
-   Theme: Dark Academic — deep navy, amber accents,
-          editorial typography, structured layout
-   =================================================== */
+
 
 :root {
   --bg:        #0d1117;
@@ -35,7 +31,7 @@ body {
   overflow-x: hidden;
 }
 
-/* ─── Sidebar ─── */
+
 .sidebar {
   width: var(--sidebar-w);
   background: var(--bg2);
@@ -125,7 +121,6 @@ body {
 .dot.greedy { background: var(--accent); }
 .dot.bt     { background: var(--info); }
 
-/* ─── Main wrap ─── */
 .main-wrap {
   margin-left: var(--sidebar-w);
   flex: 1;
@@ -134,7 +129,7 @@ body {
   min-height: 100vh;
 }
 
-/* ─── Topbar ─── */
+
 .topbar {
   display: flex;
   align-items: flex-start;
@@ -161,13 +156,13 @@ body {
   flex-wrap: wrap;
 }
 
-/* ─── Content ─── */
+
 .content {
   padding: 24px 36px 48px;
   flex: 1;
 }
 
-/* ─── Flash messages ─── */
+
 .flash {
   display: flex;
   align-items: center;
@@ -189,7 +184,7 @@ body {
 .flash-info    { background: rgba(96,165,250,.12);  border: 1px solid rgba(96,165,250,.3);  color: #93c5fd; }
 .flash-danger  { background: rgba(239,68,68,.12);   border: 1px solid rgba(239,68,68,.3);   color: #f87171; }
 
-/* ─── Buttons ─── */
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -231,7 +226,7 @@ body {
 .btn-sm { padding: 5px 12px; font-size: .75rem; }
 .btn-icon { padding: 7px 10px; }
 
-/* ─── Stat cards ─── */
+
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -280,7 +275,7 @@ body {
   opacity: .08;
 }
 
-/* ─── Cards / Panels ─── */
+
 .card {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -339,7 +334,7 @@ td {
   color: var(--text);
 }
 
-/* ─── Badges ─── */
+
 .badge {
   display: inline-flex;
   align-items: center;

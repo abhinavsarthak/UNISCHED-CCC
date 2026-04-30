@@ -1,6 +1,4 @@
-"""
-database.py - MySQL connection pool and query helpers
-"""
+
 import mysql.connector
 from mysql.connector import pooling
 from contextlib import contextmanager
@@ -35,7 +33,7 @@ def init_pool(pool_size: int = 5) -> None:
 
 @contextmanager
 def get_db():
-    """Yield a connection from the pool and commit / rollback automatically."""
+    
     if _pool is None:
         init_pool()
     conn = _pool.get_connection()
@@ -64,7 +62,7 @@ def fetchone(sql: str, params=None) -> dict | None:
 
 
 def execute(sql: str, params=None) -> int:
-    """Execute a write query; return last-insert-id."""
+    
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute(sql, params or ())

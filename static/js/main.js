@@ -1,6 +1,3 @@
-// main.js – University Course Scheduling System
-
-// ── Modal helpers ──────────────────────────────
 function openModal(id) {
   document.getElementById(id)?.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -11,7 +8,6 @@ function closeModal(id) {
   document.body.style.overflow = '';
 }
 
-// Close on overlay click
 document.addEventListener('click', (e) => {
   if (e.target.classList.contains('modal-overlay')) {
     e.target.classList.remove('open');
@@ -19,7 +15,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Close on Escape
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     document.querySelectorAll('.modal-overlay.open')
@@ -28,7 +24,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// ── Auto-dismiss flash messages ──────────────
+
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.flash').forEach(el => {
     setTimeout(() => {
@@ -38,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 5000);
   });
 
-  // Animate stat values
+
   document.querySelectorAll('.stat-value').forEach(el => {
     const target = parseInt(el.textContent);
     if (isNaN(target) || target === 0) return;
@@ -52,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// ── Confirm delete buttons ─────────────────────
+
 document.querySelectorAll('[data-confirm]')?.forEach(btn => {
   btn.addEventListener('click', e => {
     if (!confirm(btn.dataset.confirm)) e.preventDefault();
