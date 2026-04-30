@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Instructors{% endblock %}
+{% block page_title %}Instructors{% endblock %}
+{% block page_sub %}Faculty directory & availability — {{ instructors|length }} instructors{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn btn-primary" onclick="openModal('addModal')">+ Add Instructor</button>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">◉ Faculty Directory</div>
+  </div>
+  {% if instructors %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Department</th>
+          <th>Courses</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in instructors %}
+        <tr>
+          <td class="fw-bold">{{ i.name }}</td>
+          <td class="text-muted text-mono" style="font-size:.78rem;">{{ i.email }}</td>
+          <td>
+            {% if i.dept_name %}
+              <span class="badge badge-neutral">{{ i.dept_name }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            <span class="text-mono text-accent fw-bold">{{ i.course_count }}</span>
+          </td>
+          <td>
+            <div class="flex-center gap-2">
+              <button class="btn btn-ghost btn-sm"
+                      onclick="openUnavail({{ i.id }}, '{{ i.name }}')">
+                ◷ Set Availability
+              </button>
+              <form method="POST" action="{{ url_for('delete_instructor', iid=i.id) }}"
+                    onsubmit="return confirm('Delete {{ i.name }}?')">
+                <button type="submit" class="btn btn-danger btn-sm btn-icon">✕</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">◉</div>
+    <div class="empty-msg">No instructors found.</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Instructor</div>
+      <button class="modal-close" onclick="closeModal('addModal')">×</button>
+    </div>
+    <form method="POST" action="{{ url_for('add_instructor') }}">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" name="name" placeholder="Dr. Jane Smith" required>
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" name="email" placeholder="jsmith@univ.edu" required>
+        </div>
+        <div class="form-group">
+          <label>Department</label>
+          <select name="department_id">
+            <option value="">— None —</option>
+            {% for d in departments %}
+            <option value="{{ d.id }}">{{ d.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Instructor</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Unavailability Modal -->
+<div class="modal-overlay" id="unavailModal">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header">
+      <div class="modal-title">Set Unavailability — <span id="unavailName"></span></div>
+      <button class="modal-close" onclick="closeModal('unavailModal')">×</button>
+    </div>
+    <form method="POST" action="{{ url_for('set_unavailability') }}" id="unavailForm">
+      <input type="hidden" name="instructor_id" id="unavailInstructorId">
+      <div class="modal-body">
+        <p class="text-muted mb-4" style="font-size:.82rem;">
+          Check the slots when this instructor is <strong>NOT available</strong>.
+          These will be excluded from scheduling.
+        </p>
+
+        {% set days = ['Monday','Tuesday','Wednesday','Thursday','Friday'] %}
+        {% for day in days %}
+        <div style="margin-bottom:14px;">
+          <div style="font-size:.72rem; font-weight:700; letter-spacing:.1em; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">
+            {{ day }}
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            {% for ts in time_slots if ts.day_of_week == day %}
+            <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:.78rem;">
+              <input type="checkbox" name="time_slot_ids" value="{{ ts.id }}"
+                     style="accent-color:var(--accent);">
+              <span>{{ ts.start_time.strftime('%H:%M') if ts.start_time.strftime is defined else ts.start_time|string|truncate(5, True, '') }}
+                    –{{ ts.end_time.strftime('%H:%M') if ts.end_time.strftime is defined else ts.end_time|string|truncate(5, True, '') }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('unavailModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Availability</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openUnavail(iid, name) {
+  document.getElementById('unavailName').textContent = name;
+  document.getElementById('unavailInstructorId').value = iid;
+  openModal('unavailModal');
+}
+</script>
+{% endblock %}

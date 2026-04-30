@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}Courses{% endblock %}
+{% block page_title %}Courses{% endblock %}
+{% block page_sub %}Manage course catalogue — {{ courses|length }} courses{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn btn-primary" onclick="openModal('addModal')">
+  + Add Course
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">◈ Course Catalogue</div>
+    <input type="text" id="searchInput" placeholder="Search courses…"
+           style="width:220px; padding:7px 12px; font-size:.8rem;"
+           oninput="filterTable(this.value)">
+  </div>
+  {% if courses %}
+  <div class="table-wrap">
+    <table id="courseTable">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Course Name</th>
+          <th>Instructor</th>
+          <th>Department</th>
+          <th>Credits</th>
+          <th>Max Students</th>
+          <th>Duration</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in courses %}
+        <tr>
+          <td><span class="text-mono text-accent fw-bold">{{ c.code }}</span></td>
+          <td>{{ c.name }}</td>
+          <td>{{ c.instructor_name or '—' }}</td>
+          <td>
+            {% if c.dept_name %}
+              <span class="badge badge-neutral">{{ c.dept_name }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td class="text-mono">{{ c.credits }}</td>
+          <td class="text-mono">{{ c.max_students }}</td>
+          <td class="text-mono">{{ c.duration_hours }}h</td>
+          <td>
+            <div class="flex-center gap-2">
+              <button class="btn btn-ghost btn-sm btn-icon"
+                      onclick="openEdit({{ c|tojson }})">✎</button>
+              <form method="POST" action="{{ url_for('delete_course', cid=c.id) }}"
+                    onsubmit="return confirm('Delete {{ c.code }}?')">
+                <button type="submit" class="btn btn-danger btn-sm btn-icon">✕</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">◈</div>
+    <div class="empty-msg">No courses found. Add one to get started.</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New Course</div>
+      <button class="modal-close" onclick="closeModal('addModal')">×</button>
+    </div>
+    <form method="POST" action="{{ url_for('add_course') }}">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Course Code *</label>
+            <input type="text" name="code" placeholder="e.g. CS101" required>
+          </div>
+          <div class="form-group">
+            <label>Credits</label>
+            <input type="number" name="credits" value="3" min="1" max="6">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Course Name *</label>
+          <input type="text" name="name" placeholder="e.g. Introduction to Programming" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Instructor</label>
+            <select name="instructor_id">
+              <option value="">— None —</option>
+              {% for i in instructors %}
+              <option value="{{ i.id }}">{{ i.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <select name="department_id">
+              <option value="">— None —</option>
+              {% for d in departments %}
+              <option value="{{ d.id }}">{{ d.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Max Students</label>
+            <input type="number" name="max_students" value="30" min="1" max="500">
+          </div>
+          <div class="form-group">
+            <label>Duration (hours)</label>
+            <input type="number" name="duration_hours" value="1.5" step="0.5" min="0.5" max="4">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Course</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Course</div>
+      <button class="modal-close" onclick="closeModal('editModal')">×</button>
+    </div>
+    <form method="POST" id="editForm">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Course Code *</label>
+            <input type="text" name="code" id="edit_code" required>
+          </div>
+          <div class="form-group">
+            <label>Credits</label>
+            <input type="number" name="credits" id="edit_credits" min="1" max="6">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Course Name *</label>
+          <input type="text" name="name" id="edit_name" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Instructor</label>
+            <select name="instructor_id" id="edit_instructor">
+              <option value="">— None —</option>
+              {% for i in instructors %}
+              <option value="{{ i.id }}">{{ i.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <select name="department_id" id="edit_dept">
+              <option value="">— None —</option>
+              {% for d in departments %}
+              <option value="{{ d.id }}">{{ d.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Max Students</label>
+            <input type="number" name="max_students" id="edit_students" min="1">
+          </div>
+          <div class="form-group">
+            <label>Duration (hours)</label>
+            <input type="number" name="duration_hours" id="edit_duration" step="0.5" min="0.5">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('editModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openEdit(c) {
+  document.getElementById('editForm').action = '/courses/edit/' + c.id;
+  document.getElementById('edit_code').value     = c.code;
+  document.getElementById('edit_name').value     = c.name;
+  document.getElementById('edit_credits').value  = c.credits;
+  document.getElementById('edit_students').value = c.max_students;
+  document.getElementById('edit_duration').value = c.duration_hours;
+  const iSel = document.getElementById('edit_instructor');
+  const dSel = document.getElementById('edit_dept');
+  for (let o of iSel.options) o.selected = (o.value == c.instructor_id);
+  for (let o of dSel.options) o.selected = (o.value == c.department_id);
+  openModal('editModal');
+}
+function filterTable(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#courseTable tbody tr').forEach(tr => {
+    tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

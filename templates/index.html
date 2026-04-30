@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_sub %}University Course Scheduling System — Overview{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Courses</div>
+    <div class="stat-value">{{ stats.courses }}</div>
+    <div class="stat-icon">◈</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Classrooms</div>
+    <div class="stat-value">{{ stats.classrooms }}</div>
+    <div class="stat-icon">◫</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Instructors</div>
+    <div class="stat-value">{{ stats.instructors }}</div>
+    <div class="stat-icon">◉</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Time Slots</div>
+    <div class="stat-value">{{ stats.time_slots }}</div>
+    <div class="stat-icon">◷</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Scheduled</div>
+    <div class="stat-value">{{ stats.scheduled }}</div>
+    <div class="stat-icon">◆</div>
+    <div class="progress-bar">
+      <div class="progress-fill"
+           style="width:{{ [(stats.scheduled / [stats.courses, 1]|max) * 100, 100]|min }}%">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Quick Actions -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">⚡ Quick Actions</div>
+    </div>
+    <div class="card-body" style="display:flex; flex-direction:column; gap:12px;">
+      <a href="{{ url_for('schedule') }}" class="btn btn-primary">
+        ◆ Generate Schedule
+      </a>
+      <a href="{{ url_for('courses') }}" class="btn btn-secondary">
+        ◈ Manage Courses
+      </a>
+      <a href="{{ url_for('classrooms') }}" class="btn btn-secondary">
+        ◫ Manage Classrooms
+      </a>
+      <a href="{{ url_for('instructors') }}" class="btn btn-secondary">
+        ◉ Manage Instructors
+      </a>
+    </div>
+  </div>
+
+  <!-- Algorithm info -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">🧠 Algorithm Overview</div>
+    </div>
+    <div class="card-body" style="display:flex; flex-direction:column; gap:16px;">
+      <div>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+          <span class="dot greedy"></span>
+          <strong>Greedy</strong>
+          <span class="badge badge-greedy">O(n·m·t)</span>
+        </div>
+        <p class="text-muted" style="font-size:.8rem; line-height:1.5;">
+          Sorts courses by enrolment (most constrained first), then assigns each
+          to the first valid (room, time-slot) pair. Fast — typically &lt; 5 ms.
+        </p>
+      </div>
+      <hr style="border-color:var(--border);">
+      <div>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+          <span class="dot bt"></span>
+          <strong>Backtracking</strong>
+          <span class="badge badge-bt">MRV + LCV + FC</span>
+        </div>
+        <p class="text-muted" style="font-size:.8rem; line-height:1.5;">
+          CSP solver with Minimum Remaining Values variable ordering, Least
+          Constraining Value heuristic, and Forward Checking to detect dead-ends
+          early. Guarantees a solution if one exists.
+        </p>
+      </div>
+      <hr style="border-color:var(--border);">
+      <div>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+          <span class="dot" style="background:var(--success)"></span>
+          <strong>Hybrid</strong>
+          <span class="badge badge-hybrid">Recommended</span>
+        </div>
+        <p class="text-muted" style="font-size:.8rem; line-height:1.5;">
+          Greedy handles easy assignments first; Backtracking resolves remaining
+          conflicts. Best of both worlds.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent schedule table -->
+<div class="card mt-6">
+  <div class="card-header">
+    <div class="card-title">📋 Recent Schedule Entries</div>
+    <a href="{{ url_for('schedule') }}" class="btn btn-ghost btn-sm">View All →</a>
+  </div>
+  {% if recent %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Course</th>
+          <th>Room</th>
+          <th>Time Slot</th>
+          <th>Semester</th>
+          <th>Algorithm</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in recent %}
+        <tr>
+          <td>
+            <span class="text-mono" style="color:var(--accent)">{{ row.code }}</span>
+            <span class="text-muted"> · </span>{{ row.course_name }}
+          </td>
+          <td>{{ row.room }}</td>
+          <td class="text-mono" style="font-size:.78rem;">{{ row.slot_label }}</td>
+          <td>{{ row.semester }} {{ row.year }}</td>
+          <td>
+            {% if row.algorithm_used == 'Greedy' %}
+              <span class="badge badge-greedy">Greedy</span>
+            {% elif row.algorithm_used == 'Backtracking' %}
+              <span class="badge badge-bt">Backtracking</span>
+            {% else %}
+              <span class="badge badge-neutral">{{ row.algorithm_used }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">◆</div>
+    <div class="empty-msg">No schedule generated yet. Go to <a href="{{ url_for('schedule') }}" style="color:var(--accent)">Schedule</a> to run the algorithms.</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

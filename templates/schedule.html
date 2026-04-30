@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+{% block title %}Schedule{% endblock %}
+{% block page_title %}Course Schedule{% endblock %}
+{% block page_sub %}{{ semester }} {{ year }} — {{ schedule|length }} courses assigned{% endblock %}
+
+{% block topbar_actions %}
+<div class="flex-center gap-2">
+  <select id="semSelect" class="btn btn-secondary" onchange="changeSemester(this)"
+          style="font-size:.82rem; cursor:pointer;">
+    {% for sem, yr in semesters %}
+    <option value="{{ sem }}-{{ yr }}"
+            {% if sem == semester and yr == year %}selected{% endif %}>
+      {{ sem }} {{ yr }}
+    </option>
+    {% endfor %}
+  </select>
+  <button class="btn btn-primary" onclick="openModal('generateModal')">
+    ⚙ Generate Schedule
+  </button>
+  <form method="POST" action="{{ url_for('clear_schedule') }}"
+        onsubmit="return confirm('Clear the {{ semester }} {{ year }} schedule?')">
+    <input type="hidden" name="semester" value="{{ semester }}">
+    <input type="hidden" name="year" value="{{ year }}">
+    <button type="submit" class="btn btn-ghost btn-sm">✕ Clear</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- Generate Modal -->
+<div class="modal-overlay" id="generateModal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <div class="modal-title">Generate Schedule</div>
+      <button class="modal-close" onclick="closeModal('generateModal')">×</button>
+    </div>
+    <form method="POST" action="{{ url_for('generate_schedule') }}" id="genForm">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Semester</label>
+            <select name="semester">
+              <option value="Fall" {% if semester=='Fall' %}selected{% endif %}>Fall</option>
+              <option value="Spring" {% if semester=='Spring' %}selected{% endif %}>Spring</option>
+              <option value="Summer" {% if semester=='Summer' %}selected{% endif %}>Summer</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Year</label>
+            <input type="number" name="year" value="{{ year }}" min="2020" max="2030">
+          </div>
+        </div>
+
+        <div class="form-group mt-4">
+          <label>Algorithm</label>
+          <div class="algo-selector">
+            <label class="algo-card">
+              <input type="radio" name="algorithm" value="greedy">
+              <div class="algo-name">
+                <span class="dot greedy"></span> Greedy
+              </div>
+              <div class="algo-desc">Fast, first-fit. O(n·m·t). Best for quick results.</div>
+            </label>
+            <label class="algo-card">
+              <input type="radio" name="algorithm" value="backtracking">
+              <div class="algo-name">
+                <span class="dot bt"></span> Backtracking
+              </div>
+              <div class="algo-desc">CSP solver with MRV + LCV + Forward Checking. Complete.</div>
+            </label>
+            <label class="algo-card">
+              <input type="radio" name="algorithm" value="hybrid" checked>
+              <div class="algo-name">
+                <span class="dot" style="background:var(--success)"></span> Hybrid
+              </div>
+              <div class="algo-desc">Greedy first, then backtracking for failures. Recommended.</div>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('generateModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="genBtn">
+          ⚙ Run Algorithm
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if schedule %}
+<!-- Day tabs -->
+<div class="day-tabs" id="dayTabs">
+  <div class="day-tab active" onclick="showDay('all', this)">All</div>
+  {% for day in ['Monday','Tuesday','Wednesday','Thursday','Friday'] %}
+  {% if schedule|selectattr('day_of_week', 'equalto', day)|list %}
+  <div class="day-tab" onclick="showDay('{{ day }}', this)">{{ day[:3] }}</div>
+  {% endif %}
+  {% endfor %}
+</div>
+
+<!-- Schedule grid view -->
+<div class="card mb-4">
+  <div class="card-header">
+    <div class="card-title">📅 Timetable View</div>
+    <div class="flex-center gap-2">
+      <span class="badge badge-greedy">Greedy</span>
+      <span class="badge badge-bt">Backtracking</span>
+    </div>
+  </div>
+  <div class="card-body">
+    <div style="overflow-x:auto;">
+      <div class="timetable" id="timetable">
+        <!-- Built by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Table view -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">📋 Schedule Table</div>
+    <input type="text" id="schSearch" placeholder="Search…"
+           style="width:200px; padding:7px 12px; font-size:.8rem;"
+           oninput="filterSched(this.value)">
+  </div>
+  <div class="table-wrap">
+    <table id="schedTable">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Course</th>
+          <th>Instructor</th>
+          <th>Room</th>
+          <th>Day</th>
+          <th>Time</th>
+          <th>Students</th>
+          <th>Algorithm</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in schedule %}
+        <tr data-day="{{ row.day_of_week }}">
+          <td><span class="text-mono text-accent fw-bold">{{ row.code }}</span></td>
+          <td>{{ row.course_name }}</td>
+          <td class="text-muted">{{ row.instructor_name or '—' }}</td>
+          <td>
+            <span class="fw-bold">{{ row.room_name }}</span>
+            <span class="text-muted" style="font-size:.75rem;"> · {{ row.building }}</span>
+          </td>
+          <td class="text-muted">{{ row.day_of_week[:3] }}</td>
+          <td class="text-mono" style="font-size:.78rem;">
+            {{ row.start_time.strftime('%H:%M') if row.start_time.strftime is defined
+               else (row.start_time|string)[:5] }}
+            –
+            {{ row.end_time.strftime('%H:%M') if row.end_time.strftime is defined
+               else (row.end_time|string)[:5] }}
+          </td>
+          <td class="text-mono">
+            {{ row.max_students }}
+            <span class="text-muted">/ {{ row.capacity }}</span>
+          </td>
+          <td>
+            {% if row.algorithm_used == 'Greedy' %}
+              <span class="badge badge-greedy">Greedy</span>
+            {% elif row.algorithm_used == 'Backtracking' %}
+              <span class="badge badge-bt">BT</span>
+            {% else %}
+              <span class="badge badge-neutral">{{ row.algorithm_used }}</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('delete_schedule_entry', sid=row.id) }}"
+                  onsubmit="return confirm('Remove {{ row.code }} from schedule?')">
+              <button type="submit" class="btn btn-danger btn-sm btn-icon">✕</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% else %}
+<div class="empty-state" style="padding:80px 20px;">
+  <div class="empty-icon">◆</div>
+  <div class="empty-msg" style="font-size:1rem; margin-bottom:16px;">
+    No schedule for <strong>{{ semester }} {{ year }}</strong> yet.
+  </div>
+  <button class="btn btn-primary" onclick="openModal('generateModal')">
+    ⚙ Generate Schedule Now
+  </button>
+</div>
+{% endif %}
+
+{% if conflicts %}
+<div class="card mt-6">
+  <div class="card-header">
+    <div class="card-title" style="color:var(--danger);">
+      ⚠ Conflicts & Unscheduled ({{ conflicts|length }})
+    </div>
+  </div>
+  <div class="card-body">
+    {% for c in conflicts %}
+    <div class="conflict-item">
+      <span class="conflict-icon">✕</span>
+      <div class="conflict-text">
+        {% if c.code %}
+          <span class="conflict-code">{{ c.code }}</span> ·
+        {% endif %}
+        <strong>{{ c.conflict_type }}</strong> — {{ c.description }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Schedule data (passed from server) ──
+const schedData = {{ (schedule or []) | tojson }};
+
+// ── Day tab filtering ──
+function showDay(day, el) {
+  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#schedTable tbody tr').forEach(tr => {
+    tr.style.display = (day === 'all' || tr.dataset.day === day) ? '' : 'none';
+  });
+  buildTimetable(day === 'all' ? null : day);
+}
+
+function filterSched(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#schedTable tbody tr').forEach(tr => {
+    tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ── Timetable builder ──
+const DAYS  = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+const TIMES = ['08:00','09:45','11:30','14:00','15:45'];
+
+function fmtTime(t) {
+  if (!t) return '';
+  const s = typeof t === 'string' ? t : String(t);
+  return s.substring(0, 5);
+}
+
+function buildTimetable(filterDay) {
+  const tt = document.getElementById('timetable');
+  if (!tt) return;
+  tt.innerHTML = '';
+
+  const days = filterDay ? [filterDay] : DAYS;
+  const cols  = days.length;
+  tt.style.gridTemplateColumns = `80px repeat(${cols}, 1fr)`;
+
+  // Header
+  const corner = document.createElement('div');
+  corner.className = 'timetable-head';
+  corner.textContent = 'Time';
+  tt.appendChild(corner);
+  days.forEach(d => {
+    const h = document.createElement('div');
+    h.className = 'timetable-head';
+    h.textContent = d.substring(0,3);
+    tt.appendChild(h);
+  });
+
+  // Map schedule
+  const map = {};
+  schedData.forEach(r => {
+    const key = `${r.day_of_week}|${fmtTime(r.start_time)}`;
+    map[key] = r;
+  });
+
+  TIMES.forEach(t => {
+    // Time label
+    const tl = document.createElement('div');
+    tl.className = 'timetable-time';
+    tl.textContent = t;
+    tt.appendChild(tl);
+
+    days.forEach(day => {
+      const cell = document.createElement('div');
+      const entry = map[`${day}|${t}`];
+      if (entry) {
+        cell.className = 'timetable-cell has-course';
+        const block = document.createElement('div');
+        const isBT = entry.algorithm_used === 'Backtracking';
+        block.className = 'course-block' + (isBT ? ' bt-block' : '');
+        block.innerHTML = `
+          <div class="cb-code">${entry.code}</div>
+          <div class="cb-room">◫ ${entry.room_name}</div>
+          <div class="cb-inst">◉ ${entry.instructor_name || '—'}</div>
+        `;
+        block.title = `${entry.code} – ${entry.course_name}\nRoom: ${entry.room_name}, ${entry.building}\nInstructor: ${entry.instructor_name || 'N/A'}\nAlgorithm: ${entry.algorithm_used}`;
+        cell.appendChild(block);
+      } else {
+        cell.className = 'timetable-cell';
+      }
+      tt.appendChild(cell);
+    });
+  });
+}
+
+// Generate button loading state
+document.getElementById('genForm')?.addEventListener('submit', function() {
+  const btn = document.getElementById('genBtn');
+  btn.innerHTML = '<span class="spinner"></span> Running…';
+  btn.disabled = true;
+});
+
+// Semester switcher
+function changeSemester(sel) {
+  const [sem, yr] = sel.value.split('-');
+  window.location.href = `/schedule?semester=${sem}&year=${yr}`;
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => buildTimetable(null));
+</script>
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Classrooms{% endblock %}
+{% block page_title %}Classrooms{% endblock %}
+{% block page_sub %}Manage venue inventory — {{ classrooms|length }} rooms{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn btn-primary" onclick="openModal('addModal')">+ Add Classroom</button>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">◫ Classroom Inventory</div>
+    <input type="text" id="searchInput" placeholder="Search…"
+           style="width:200px; padding:7px 12px; font-size:.8rem;"
+           oninput="filterTable(this.value)">
+  </div>
+  {% if classrooms %}
+  <div class="table-wrap">
+    <table id="roomTable">
+      <thead>
+        <tr>
+          <th>Room Name</th>
+          <th>Building</th>
+          <th>Capacity</th>
+          <th>Projector</th>
+          <th>Lab</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in classrooms %}
+        <tr>
+          <td class="fw-bold">{{ r.name }}</td>
+          <td class="text-muted">{{ r.building }}</td>
+          <td>
+            <span class="text-mono text-accent fw-bold">{{ r.capacity }}</span>
+            <div class="progress-bar" style="width:80px; margin-top:4px;">
+              <div class="progress-fill" style="width:{{ [r.capacity / 1, 100]|min }}%;
+                   background:{% if r.capacity >= 50 %}var(--success){% elif r.capacity >= 30 %}var(--warning){% else %}var(--danger){% endif %}">
+              </div>
+            </div>
+          </td>
+          <td>
+            {% if r.has_projector %}
+              <span class="badge badge-success">✓ Yes</span>
+            {% else %}
+              <span class="badge badge-neutral">No</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if r.has_lab %}
+              <span class="badge badge-bt">✓ Lab</span>
+            {% else %}
+              <span class="badge badge-neutral">No</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('delete_classroom', rid=r.id) }}"
+                  onsubmit="return confirm('Delete {{ r.name }}?')">
+              <button type="submit" class="btn btn-danger btn-sm btn-icon">✕</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">◫</div>
+    <div class="empty-msg">No classrooms found. Add one to enable scheduling.</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Capacity Summary -->
+<div class="card mt-6">
+  <div class="card-header">
+    <div class="card-title">📊 Capacity Summary</div>
+  </div>
+  <div class="card-body">
+    <div class="grid-3">
+      <div>
+        <div class="stat-label">Total Seats</div>
+        <div class="stat-value">{{ classrooms|sum(attribute='capacity') }}</div>
+      </div>
+      <div>
+        <div class="stat-label">Rooms with Projector</div>
+        <div class="stat-value">{{ classrooms|selectattr('has_projector')|list|length }}</div>
+      </div>
+      <div>
+        <div class="stat-label">Lab Rooms</div>
+        <div class="stat-value">{{ classrooms|selectattr('has_lab')|list|length }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Classroom</div>
+      <button class="modal-close" onclick="closeModal('addModal')">×</button>
+    </div>
+    <form method="POST" action="{{ url_for('add_classroom') }}">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Room Name *</label>
+            <input type="text" name="name" placeholder="e.g. Room 101" required>
+          </div>
+          <div class="form-group">
+            <label>Building *</label>
+            <input type="text" name="building" placeholder="e.g. Main Hall" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Capacity *</label>
+          <input type="number" name="capacity" placeholder="30" min="1" required>
+        </div>
+        <div style="display:flex; gap:20px; margin-top:8px;">
+          <div class="checkbox-group">
+            <input type="checkbox" name="has_projector" id="has_projector" value="1">
+            <label for="has_projector">Has Projector</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" name="has_lab" id="has_lab" value="1">
+            <label for="has_lab">Lab Room</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Classroom</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterTable(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#roomTable tbody tr').forEach(tr => {
+    tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

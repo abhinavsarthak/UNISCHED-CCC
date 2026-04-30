@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}UCS{% endblock %} | University Scheduler</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="2" y="2" width="10" height="10" rx="2" fill="var(--accent)"/>
+        <rect x="16" y="2" width="10" height="10" rx="2" fill="var(--accent)" opacity=".5"/>
+        <rect x="2" y="16" width="10" height="10" rx="2" fill="var(--accent)" opacity=".5"/>
+        <rect x="16" y="16" width="10" height="10" rx="2" fill="var(--accent)"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">UniSched</div>
+      <div class="brand-sub">Scheduling System</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a href="{{ url_for('index') }}" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+      <span class="nav-icon">⬡</span> Dashboard
+    </a>
+
+    <div class="nav-section-label">Data</div>
+    <a href="{{ url_for('courses') }}" class="nav-item {% if request.endpoint == 'courses' %}active{% endif %}">
+      <span class="nav-icon">◈</span> Courses
+    </a>
+    <a href="{{ url_for('classrooms') }}" class="nav-item {% if request.endpoint == 'classrooms' %}active{% endif %}">
+      <span class="nav-icon">◫</span> Classrooms
+    </a>
+    <a href="{{ url_for('instructors') }}" class="nav-item {% if request.endpoint == 'instructors' %}active{% endif %}">
+      <span class="nav-icon">◉</span> Instructors
+    </a>
+    <a href="{{ url_for('timeslots') }}" class="nav-item {% if request.endpoint == 'timeslots' %}active{% endif %}">
+      <span class="nav-icon">◷</span> Time Slots
+    </a>
+
+    <div class="nav-section-label">Algorithms</div>
+    <a href="{{ url_for('schedule') }}" class="nav-item {% if request.endpoint == 'schedule' %}active{% endif %}">
+      <span class="nav-icon">◆</span> Schedule
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="algo-badge">
+      <span class="dot greedy"></span> Greedy
+    </div>
+    <div class="algo-badge">
+      <span class="dot bt"></span> Backtracking
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main-wrap">
+  <header class="topbar">
+    <div class="topbar-left">
+      <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+      <p class="page-sub">{% block page_sub %}{% endblock %}</p>
+    </div>
+    <div class="topbar-right">
+      {% block topbar_actions %}{% endblock %}
+    </div>
+  </header>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="flash flash-{{ cat }}">
+        <span class="flash-icon">{% if cat == 'success' %}✓{% elif cat == 'warning' %}⚠{% else %}ℹ{% endif %}</span>
+        {{ msg }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <main class="content">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

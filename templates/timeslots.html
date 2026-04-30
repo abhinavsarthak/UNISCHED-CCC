@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Time Slots{% endblock %}
+{% block page_title %}Time Slots{% endblock %}
+{% block page_sub %}Weekly schedule slots — {{ time_slots|length }} slots{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn btn-primary" onclick="openModal('addModal')">+ Add Time Slot</button>
+{% endblock %}
+
+{% block content %}
+{% set days = ['Monday','Tuesday','Wednesday','Thursday','Friday'] %}
+
+<div class="grid-2">
+{% for day in days %}
+<div class="card mb-4">
+  <div class="card-header">
+    <div class="card-title">{{ day }}</div>
+    <span class="badge badge-neutral">
+      {{ time_slots|selectattr('day_of_week','equalto',day)|list|length }} slots
+    </span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Start</th><th>End</th><th>Label</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for ts in time_slots if ts.day_of_week == day %}
+        <tr>
+          <td class="text-mono text-accent">{{ ts.start_time }}</td>
+          <td class="text-mono text-muted">{{ ts.end_time }}</td>
+          <td class="text-muted" style="font-size:.78rem;">{{ ts.slot_label }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('delete_timeslot', tsid=ts.id) }}"
+                  onsubmit="return confirm('Delete this time slot?')">
+              <button type="submit" class="btn btn-danger btn-sm btn-icon">✕</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-muted" style="text-align:center; padding:20px;">No slots</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% if loop.index == 2 %}</div><div class="grid-2">{% endif %}
+{% endfor %}
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Time Slot</div>
+      <button class="modal-close" onclick="closeModal('addModal')">×</button>
+    </div>
+    <form method="POST" action="{{ url_for('add_timeslot') }}">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Day of Week *</label>
+          <select name="day_of_week" required>
+            {% for d in ['Monday','Tuesday','Wednesday','Thursday','Friday'] %}
+            <option value="{{ d }}">{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Start Time *</label>
+            <input type="time" name="start_time" required>
+          </div>
+          <div class="form-group">
+            <label>End Time *</label>
+            <input type="time" name="end_time" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Label (optional)</label>
+          <input type="text" name="slot_label" placeholder="Auto-generated if blank">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Slot</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
