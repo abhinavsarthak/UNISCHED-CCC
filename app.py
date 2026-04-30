@@ -22,9 +22,6 @@ app.json = CustomJSONProvider(app)
 app.secret_key = "ucs-secret-2025"
 
 
-# ─────────────────────────────────────────────────────────────
-# Helpers
-# ─────────────────────────────────────────────────────────────
 
 def _get_blocked() -> dict[int, set]:
     rows = db.fetchall(
@@ -45,9 +42,7 @@ def _clear_schedule(semester: str, year: int) -> None:
     )
 
 
-# ─────────────────────────────────────────────────────────────
-# Dashboard
-# ─────────────────────────────────────────────────────────────
+
 
 @app.route("/")
 def index():
@@ -130,9 +125,7 @@ def edit_course(cid):
     return redirect(url_for("courses"))
 
 
-# ─────────────────────────────────────────────────────────────
-# Classrooms CRUD
-# ─────────────────────────────────────────────────────────────
+
 
 @app.route("/classrooms")
 def classrooms():
@@ -160,9 +153,6 @@ def delete_classroom(rid):
     return redirect(url_for("classrooms"))
 
 
-# ─────────────────────────────────────────────────────────────
-# Instructors
-# ─────────────────────────────────────────────────────────────
 
 @app.route("/instructors")
 def instructors():
@@ -218,9 +208,6 @@ def set_unavailability():
     return redirect(url_for("instructors"))
 
 
-# ─────────────────────────────────────────────────────────────
-# Schedule Generation & View
-# ─────────────────────────────────────────────────────────────
 
 @app.route("/schedule")
 def schedule():
@@ -339,10 +326,6 @@ def delete_schedule_entry(sid):
     return redirect(url_for("schedule"))
 
 
-# ─────────────────────────────────────────────────────────────
-# API – JSON endpoints consumed by JS
-# ─────────────────────────────────────────────────────────────
-
 @app.route("/api/schedule")
 def api_schedule():
     semester = request.args.get("semester", "Fall")
@@ -388,9 +371,7 @@ def api_stats():
     return jsonify(stats)
 
 
-# ─────────────────────────────────────────────────────────────
-# Time-slot management
-# ─────────────────────────────────────────────────────────────
+
 
 @app.route("/timeslots")
 def timeslots():
@@ -419,7 +400,7 @@ def delete_timeslot(tsid):
     return redirect(url_for("timeslots"))
 
 
-# ─────────────────────────────────────────────────────────────
+
 
 if __name__ == "__main__":
     db.init_pool()

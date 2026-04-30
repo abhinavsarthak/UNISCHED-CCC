@@ -1,32 +1,10 @@
-"""
-algorithms.py
-=============
-Greedy + Backtracking course-scheduling algorithms.
 
-Data structures passed in / returned
--------------------------------------
-courses   : list of dicts  {id, code, name, instructor_id, max_students, ...}
-classrooms: list of dicts  {id, name, capacity, ...}
-time_slots: list of dicts  {id, slot_label, day_of_week, start_time, end_time}
-blocked   : dict           {instructor_id: set(time_slot_ids)}   ← unavailability
-
-Returns
--------
-ScheduleResult dataclass with:
-  assignments : list of {course_id, classroom_id, time_slot_id}
-  unscheduled : list of course dicts that could not be placed
-  conflicts   : list of conflict description strings
-  algorithm   : "Greedy" | "Backtracking"
-  stats       : dict of timing / step counts
-"""
 from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 
 
-# ──────────────────────────────────────────────
-# Domain types
-# ──────────────────────────────────────────────
+
 
 @dataclass
 class ScheduleResult:
@@ -37,12 +15,9 @@ class ScheduleResult:
     stats:       dict       = field(default_factory=dict)
 
 
-# ──────────────────────────────────────────────
-# Constraint checker (shared by both algorithms)
-# ──────────────────────────────────────────────
+
 
 class ConstraintChecker:
-    """Tracks existing assignments and validates new ones."""
 
     def __init__(self, blocked: dict[int, set]):
         # blocked[instructor_id] = {time_slot_id, ...}
@@ -102,9 +77,6 @@ class ConstraintChecker:
         return c
 
 
-# ──────────────────────────────────────────────
-# Greedy Algorithm
-# ──────────────────────────────────────────────
 
 def greedy_schedule(
     courses:    list[dict],
@@ -112,14 +84,7 @@ def greedy_schedule(
     time_slots: list[dict],
     blocked:    dict[int, set],
 ) -> ScheduleResult:
-    """
-    Greedy heuristic
-    ----------------
-    1. Sort courses by max_students DESC (most constrained first — they need
-       bigger rooms and get first pick).
-    2. For each course iterate time-slots then classrooms; take the first
-       combination that passes all constraints.
-    """
+   
     t0     = time.perf_counter()
     result = ScheduleResult(algorithm="Greedy")
     checker = ConstraintChecker(blocked)
@@ -161,11 +126,7 @@ def greedy_schedule(
     return result
 
 
-# ──────────────────────────────────────────────
-# Backtracking Algorithm
-# ──────────────────────────────────────────────
 
-# Hard cap to keep the demo responsive
 MAX_BACKTRACKS = 500_000
 
 
@@ -176,21 +137,7 @@ def backtracking_schedule(
     blocked:    dict[int, set],
     initial_checker: ConstraintChecker | None = None,
 ) -> ScheduleResult:
-    """
-    Backtracking with constraint propagation
-    ----------------------------------------
-    Variables   : courses (ordered by degree heuristic – most constrained first)
-    Domains     : (classroom, time_slot) pairs that satisfy hard constraints for
-                  each course even before backtracking starts (forward checking).
-    Constraints : capacity, room-clash, instructor-clash, unavailability.
-
-    Optimisations
-    ~~~~~~~~~~~~~
-    * Minimum Remaining Values (MRV): pick course whose domain is smallest.
-    * Forward checking: prune domains of un-assigned courses after each commit.
-    * Least Constraining Value (LCV): choose the value that prunes the fewest
-      other domains first.
-    """
+   
     t0 = time.perf_counter()
     result = ScheduleResult(algorithm="Backtracking")
     backtracks  = 0
@@ -330,9 +277,6 @@ def backtracking_schedule(
     return result
 
 
-# ──────────────────────────────────────────────
-# Hybrid: Greedy first, then Backtracking for remainders
-# ──────────────────────────────────────────────
 
 def hybrid_schedule(
     courses:    list[dict],

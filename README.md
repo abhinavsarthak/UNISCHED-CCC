@@ -44,9 +44,15 @@ university_scheduler/
 
 ## Setup & Installation
 
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/yourusername/university_scheduler.git
+cd UNISCHED-CCC
+```
 
 
-### 1. Python environment
+### 2. Python environment
 
 ```bash
 python -m venv venv
@@ -54,7 +60,7 @@ source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. MySQL database
+### 3. MySQL database
 
 ```bash
 mysql -u root -p < setup.sql
@@ -63,14 +69,14 @@ mysql -u root -p < setup.sql
 This creates the `university_scheduler` database with all tables and sample data
 (6 departments, 10 instructors, 15 courses, 10 classrooms, 25 time slots).
 
-### 3. Environment variables
+### 4. Environment variables
 
 ```bash
 cp .env.example .env
 # Edit .env with your MySQL credentials
 ```
 
-### 4. Run
+### 5. Run
 
 ```bash
 python app.py
