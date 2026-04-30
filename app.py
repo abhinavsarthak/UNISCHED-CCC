@@ -1,7 +1,4 @@
-"""
-app.py – University Course Scheduling System
-Flask + MySQL + Greedy / Backtracking algorithms
-"""
+
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 import database as db
 from algorithms import greedy_schedule, backtracking_schedule, hybrid_schedule
